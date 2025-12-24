@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Details</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; background:#f5f5f5; color:#111 }
+        .card { max-width: 900px; margin: 0 auto; border-radius:12px }
+        .card .card-body { background:#fff; border-radius:12px }
+        h3.card-title { color:#b71c1c; font-weight:800 }
+        .btn-secondary { background:#6c757d; border-color:#6c757d }
+        ul { padding-left: 1rem }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="btn btn-secondary mb-4"><i class="fas fa-arrow-left me-2"></i>Back to Search</a>
+
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% elif not hospital %}
+            <div class="alert alert-warning">Hospital not found.</div>
+        {% else %}
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title">{{ hospital.name }} <small class="text-muted">({{ hospital.type }})</small></h3>
+                    <p class="mb-1"><strong>Address:</strong> {{ hospital.address }}</p>
+                    <p class="mb-1"><strong>Location:</strong> {{ hospital.location }}</p>
+                    <p class="mb-1"><strong>Phone:</strong> {{ hospital.phone }}</p>
+                    <p class="mb-1"><strong>Distance:</strong> {{ hospital.distance }} km</p>
+
+                    <hr>
+                    <h5>Facilities</h5>
+                    <ul>
+                        <li>Emergency: {{ 'Yes' if hospital.facilities.emergency else 'No' }}</li>
+                        <li>ICU: {{ 'Yes' if hospital.facilities.icu else 'No' }} (Beds: {{ hospital.facilities.icuBeds }}, Available: {{ hospital.facilities.icuAvailable }})</li>
+                        <li>OPD: {{ 'Yes' if hospital.facilities.opd else 'No' }}</li>
+                        <li>Ventilators: {{ hospital.facilities.ventilators }} (Available: {{ hospital.facilities.ventilatorsAvailable }})</li>
+                    </ul>
+
+                    <h5>Specialties</h5>
+                    <p>{{ hospital.specialties | join(', ') }}</p>
+
+                    <h5>Doctors</h5>
+                    <ul>
+                        {% for spec, count in hospital.doctors.items() %}
+                            <li>{{ spec | capitalize }}: {{ count }}</li>
+                        {% endfor %}
+                    </ul>
+
+                    <h5>Additional Info</h5>
+                    <p>Last updated: {{ hospital.get('last_updated', 'N/A') }}</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

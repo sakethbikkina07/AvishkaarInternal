@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background:#f5f5f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:#111 }
+        .card { border-radius:12px; border:1px solid #eee }
+        .btn-primary { background:#b71c1c; border-color:#b71c1c; font-weight:700; padding:10px 16px }
+        .btn-primary:hover { background:#a31616 }
+        h3 { font-weight:800; color:#b71c1c }
+    </style>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <div class="container py-4">
+        <a href="/" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left me-2"></i>Back to Search</a>
+        <h3>Search Results</h3>
+        <div id="map" class="mb-3" style="height:360px; border-radius:12px; overflow:hidden; border:1px solid #e8e8e8"></div>
+        {% if hospitals is not defined or hospitals|length == 0 %}
+            <div class="alert alert-info">No hospitals found.</div>
+        {% else %}
+            <div class="row">
+                {% for h in hospitals %}
+                    <div class="col-md-12">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ h.name }} <small class="text-muted">({{ h.type }})</small></h5>
+                                <p class="mb-1"><strong>Distance:</strong> {{ h.distance }} km</p>
+                                <p class="mb-1"><strong>Address:</strong> {{ h.address }}</p>
+                                <p class="mb-1"><strong>Phone:</strong> {{ h.phone }}</p>
+                                <p class="mb-1"><strong>ICU Available:</strong> {{ h.facilities.icuAvailable if h.facilities is defined else 'N/A' }}</p>
+                                <p><strong>Specialties:</strong> {{ h.specialties | join(', ') }}</p>
+                                <a href="/hospital/{{ h.id }}" class="btn btn-primary btn-sm">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+    <script>
+        // Get hospitals data from server-rendered context
+        const hospitals = {{ hospitals|tojson | safe }} || [];
+
+        // Initialize map only if there are hospitals
+        if (hospitals.length > 0) {
+            // center on average lat/lng or first hospital
+            let lat = 0, lng = 0;
+            hospitals.forEach(h => { lat += (h.latitude || 0); lng += (h.longitude || 0); });
+            lat = lat / hospitals.length; lng = lng / hospitals.length;
+
+            const map = L.map('map').setView([lat, lng], 11);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            hospitals.forEach(h => {
+                if (typeof h.latitude === 'number' && typeof h.longitude === 'number') {
+                    const marker = L.marker([h.latitude, h.longitude]).addTo(map);
+                    const popupHtml = `<strong>${h.name}</strong><br>${h.address || ''}<br><a href="/hospital/${h.id}">View details</a>`;
+                    marker.bindPopup(popupHtml);
+                }
+            });
+        } else {
+            // Hide map when no results
+            const m = document.getElementById('map'); if (m) m.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
